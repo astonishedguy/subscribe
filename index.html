@@ -1,105 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catch the Subscribe!</title>
-<style>
-  body {
-    margin: 0;
-    height: 100vh;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
-    user-select: none;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Subscribe Clicker Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2c2c3e);
+      color: #fff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
 
-  #startMessage {
-    font-size: 2rem;
-    text-shadow: 2px 2px 5px black;
-    margin-bottom: 20px;
-    text-align: center;
-  }
+    .controls, .scoreboard, .game-over {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-  #target {
-    width: 100px;
-    height: auto;
-    position: absolute;
-    cursor: pointer;
-    pointer-events: auto;
-    transition: transform 0.1s ease, left 0.1s ease, top 0.1s ease;
-    display: none;
-  }
+    input[type="number"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 100px;
+      border-radius: 5px;
+      border: none;
+      margin-right: 10px;
+    }
 
-  #scoreboard, #timer {
-    position: fixed;
-    top: 20px;
-    font-size: 1.5rem;
-    text-shadow: 2px 2px 5px black;
-    display: none;
-    z-index: 10;
-  }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-  #timer {
-    top: 50px;
-    font-size: 1.3rem;
-  }
+    button:hover {
+      background-color: #c0392b;
+    }
 
-  #controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 20px;
-  }
+    #subscribe-btn {
+      position: absolute;
+      background-color: #ff0000;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
 
-  #message {
-    font-size: 2rem;
-    display: none;
-    color: gold;
-    text-shadow: 2px 2px 5px black;
-    text-align: center;
-  }
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ff4757;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: explode 0.6s ease-out forwards;
+    }
 
-  #restartBtn, #startBtn {
-    padding: 10px 20px;
-    font-size: 1.2rem;
-    background: gold;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
-  }
+    @keyframes explode {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(3) translateY(-20px);
+      }
+    }
 
-  #restartBtn:hover, #startBtn:hover {
-    transform: scale(1.1);
-    background: #ffc107;
-  }
+    .scoreboard {
+      font-size: 20px;
+    }
 
-  .particle {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    pointer-events: none;
-    background: yellow;
-    opacity: 0.8;
-    animation: fade 0.6s linear forwards;
-  }
+    .game-over {
+      font-size: 24px;
+      font-weight: bold;
+    }
 
-  @keyframes fade {
-    0% { transform: translateY(0px) scale(1); opacity: 1; }
-    100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
-  }
+    @media (max-width: 600px) {
+      #subscribe-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+      }
 
-  input[type="number"] {
-    width: 60px;
-    padding: 3px;
-    border-radius: 5px;
+      input[type="number"] {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <input type="number" id="timer-input" placeholder="Seconds" min="1" />
+    <button id="start-btn">Start Game</button>
+  </div>
+
+  <div class="scoreboard" id="scoreboard" style="display:none;">
+    Score: <span id="score">0</span> | Time Left: <span id="time">0</span>s
+  </div>
+
+  <button id="subscribe-btn" style="display:none;">Subscribe</button>
+
+  <div class="game-over" id="game-over" style="display:none;"></div>
+  <button id="restart-btn" style="display:none;">Restart Game</button>
+
+  <script>
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const subscribeBtn = document.getElementById('subscribe-btn');
+    const timerInput = document.getElementById('timer-input');
+    const scoreDisplay = document.getElementById('score');
+    const timeDisplay = document.getElementById('time');
+    const scoreboard = document.getElementById('scoreboard');
+    const gameOverText = document.getElementById('game-over');
+
+    let score = 0;
+    let timeLeft = 0;
+    let gameInterval;
+    let moveInterval;
+
+    function startGame() {
+      const duration = parseInt(timerInput.value);
+      if (isNaN(duration) || duration <= 0) return alert("Enter a valid time!");
+
+      score = 0;
+      timeLeft = duration;
+      scoreDisplay.textContent = score;
+      timeDisplay.textContent = timeLeft;
+
+      startBtn.style.display = 'none';
+      timerInput.style.display = 'none';
+      scoreboard.style.display = 'block';
+      subscribeBtn.style.display = 'block';
+      gameOverText.style.display = 'none';
+      restartBtn.style.display = 'none';
+
+      moveSubscribeButton();
+      gameInterval = setInterval(() => {
+        timeLeft--;
+        timeDisplay.textContent = timeLeft;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+
+      moveInterval = setInterval(() => {
+        moveSubscribeButton();
+      }, 1000);
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearInterval(moveInterval);
+      subscribeBtn.style.display = 'none';
+      gameOverText.textContent = `Game Over! Your Score: ${score}`;
+      gameOverText.style.display = 'block';
+      restartBtn.style.display = 'inline-block';
+    }
+
+    function restartGame() {
+      timerInput.style.display = 'inline-block';
+      startBtn.style.display = 'inline-block';
+      scoreboard.style.display = 'none';
+      gameOverText.style.display = 'none';
+      restartBtn.style.display = 'none';
+      score = 0;
+      timeLeft = 0;
+    }
+
+    function moveSubscribeButton() {
+      const btnSize = subscribeBtn.getBoundingClientRect();
+      const padding = 20;
+      const maxX = window.innerWidth - btnSize.width - padding;
+      const maxY = window.innerHeight - btnSize.height - padding;
+
+      let x = Math.random() * maxX;
+      let y = Math.random() * maxY;
+
+      subscribeBtn.style.left = `${x}px`;
+      subscribeBtn.style.top = `${y}px`;
+    }
+
+    function spawnParticles(x, y) {
+      for (let i = 0; i < 10; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        document.body.appendChild(particle);
+        setTimeout(() => particle.remove(), 600);
+      }
+    }
+
+    function avoidMouse(e) {
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      const btnRect = subscribeBtn.getBoundingClientRect();
+      const btnX = btnRect.left + btnRect.width / 2;
+      const btnY = btnRect.top + btnRect.height / 2;
+
+      const distance = Math.hypot(mouseX - btnX, mouseY - btnY);
+      if (distance < 100) {
+        moveSubscribeButton();
+      }
+    }
+
+    subscribeBtn.addEventListener('click', (e) => {
+      score++;
+      scoreDisplay.textContent = score;
+      spawnParticles(e.clientX, e.clientY);
+      moveSubscribeButton();
+    });
+
+    document.addEventListener('mousemove', avoidMouse);
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', restartGame);
+  </script>
+</body>
+</html>    border-radius: 5px;
     border: none;
     font-size: 1rem;
   }
@@ -247,3 +374,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
