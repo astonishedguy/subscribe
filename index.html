@@ -42,6 +42,7 @@
     font-size: 1.5rem;
     text-shadow: 2px 2px 5px black;
     display: none;
+    z-index: 10;
   }
 
   #timer {
@@ -102,6 +103,12 @@
     border: none;
     font-size: 1rem;
   }
+
+  @media (max-width: 500px) {
+    #target { width: 70px; }
+    #startMessage { font-size: 1.5rem; }
+    #scoreboard, #timer { font-size: 1.2rem; }
+  }
 </style>
 </head>
 <body>
@@ -110,131 +117,133 @@
 
 <div id="controls">
   <label>Set Timer: <input id="timerInput" type="number" value="30" min="5" max="300"> sec</label>
-  <button id="startBtn">Start Game</button>
+  <button id="startBtn" type="button">Start Game</button>
 </div>
 
 <div id="scoreboard">Score: 0</div>
 <div id="timer">Time: 30</div>
 <div id="message"></div>
-<button id="restartBtn">Restart Game</button>
+<button id="restartBtn" type="button">Restart Game</button>
 
 <!-- Subscribe button image -->
 <img id="target" src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" alt="Subscribe">
 
 <script>
-const target = document.getElementById('target');
-const scoreDisplay = document.getElementById('scoreboard');
-const timerDisplay = document.getElementById('timer');
-const message = document.getElementById('message');
-const restartBtn = document.getElementById('restartBtn');
-const startBtn = document.getElementById('startBtn');
-const timerInput = document.getElementById('timerInput');
-const startMessage = document.getElementById('startMessage');
+document.addEventListener('DOMContentLoaded', () => {
+  const target = document.getElementById('target');
+  const scoreDisplay = document.getElementById('scoreboard');
+  const timerDisplay = document.getElementById('timer');
+  const message = document.getElementById('message');
+  const restartBtn = document.getElementById('restartBtn');
+  const startBtn = document.getElementById('startBtn');
+  const timerInput = document.getElementById('timerInput');
+  const startMessage = document.getElementById('startMessage');
 
-let score = 0;
-let time = 30;
-let gameInterval;
-let gameActive = false;
+  let score = 0;
+  let time = 30;
+  let gameInterval;
+  let gameActive = false;
 
-// Spawn particles
-function spawnParticles(x, y) {
-  for (let i = 0; i < 7; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = x + 'px';
-    p.style.top = y + 'px';
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 600);
+  // Spawn particles
+  function spawnParticles(x, y) {
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 600);
+    }
   }
-}
 
-// Click handler
-target.addEventListener('click', (e) => {
-  if(!gameActive) return;
-  score++;
-  scoreDisplay.textContent = 'Score: ' + score;
-  spawnParticles(e.pageX, e.pageY);
-  moveTargetRandom();
-});
-
-// Countdown timer
-function startTimer() {
-  clearInterval(gameInterval);
-  gameInterval = setInterval(() => {
+  // Click handler
+  target.addEventListener('click', (e) => {
     if(!gameActive) return;
-    time--;
-    timerDisplay.textContent = 'Time: ' + time;
-    if (time <= 0) endGame();
-  }, 1000);
-}
+    score++;
+    scoreDisplay.textContent = 'Score: ' + score;
+    spawnParticles(e.pageX, e.pageY);
+    moveTargetRandom();
+  });
 
-// Move target randomly
-function moveTargetRandom() {
-  const x = Math.random() * (window.innerWidth - target.offsetWidth);
-  const y = Math.random() * (window.innerHeight - target.offsetHeight);
-  target.style.left = x + 'px';
-  target.style.top = y + 'px';
-  target.style.transform = rotate(${Math.random()*360}deg) scale(${0.8 + Math.random()*0.4});
-}
-
-// Run-away feature
-document.addEventListener('mousemove', (e) => {
-  if(!gameActive) return;
-  const rect = target.getBoundingClientRect();
-  const dx = rect.left + rect.width / 2 - e.clientX;
-  const dy = rect.top + rect.height / 2 - e.clientY;
-  const distance = Math.sqrt(dx*dx + dy*dy);
-
-  if (distance < 150) {
-    const speed = 8 + score*0.3;
-    const moveX = (dx / distance) * speed;
-    const moveY = (dy / distance) * speed;
-
-    let newX = rect.left + moveX;
-    let newY = rect.top + moveY;
-
-    newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
-    newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
-
-    target.style.left = newX + 'px';
-    target.style.top = newY + 'px';
+  // Countdown timer
+  function startTimer() {
+    clearInterval(gameInterval);
+    gameInterval = setInterval(() => {
+      if(!gameActive) return;
+      time--;
+      timerDisplay.textContent = 'Time: ' + time;
+      if(time <= 0) endGame();
+    }, 1000);
   }
-});
 
-// End game
-function endGame() {
-  gameActive = false;
-  message.textContent = Game Over! Your Score: ${score};
-  message.style.display = 'block';
-  restartBtn.style.display = 'inline-block';
+  // Move target randomly
+  function moveTargetRandom() {
+    const x = Math.random() * (window.innerWidth - target.offsetWidth);
+    const y = Math.random() * (window.innerHeight - target.offsetHeight);
+    target.style.left = x + 'px';
+    target.style.top = y + 'px';
+    target.style.transform = rotate(${Math.random()*360}deg) scale(${0.8 + Math.random()*0.4});
+  }
+
+  // Run-away feature
+  document.addEventListener('mousemove', (e) => {
+    if(!gameActive) return;
+    const rect = target.getBoundingClientRect();
+    const dx = rect.left + rect.width / 2 - e.clientX;
+    const dy = rect.top + rect.height / 2 - e.clientY;
+    const distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance < 150) {
+      const speed = 8 + score*0.3;
+      const moveX = (dx / distance) * speed;
+      const moveY = (dy / distance) * speed;
+
+      let newX = rect.left + moveX;
+      let newY = rect.top + moveY;
+
+      newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
+      newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
+
+      target.style.left = newX + 'px';
+      target.style.top = newY + 'px';
+    }
+  });
+
+  // End game
+  function endGame() {
+    gameActive = false;
+    message.textContent = Game Over! Your Score: ${score};
+    message.style.display = 'block';
+    restartBtn.style.display = 'inline-block';
+    target.style.display = 'none';
+  }
+
+  // Start game
+  function startGame() {
+    score = 0;
+    time = parseInt(timerInput.value) || 30;
+    scoreDisplay.textContent = 'Score: 0';
+    timerDisplay.textContent = 'Time: ' + time;
+    message.style.display = 'none';
+    restartBtn.style.display = 'none';
+    startMessage.style.display = 'none';
+    scoreDisplay.style.display = 'block';
+    timerDisplay.style.display = 'block';
+    target.style.display = 'block';
+    gameActive = true;
+    moveTargetRandom();
+    startTimer();
+  }
+
+  startBtn.addEventListener('click', startGame);
+  restartBtn.addEventListener('click', startGame);
+
+  // Initialize visibility
   target.style.display = 'none';
-}
-
-// Start game
-function startGame() {
-  score = 0;
-  time = parseInt(timerInput.value) || 30;
-  scoreDisplay.textContent = 'Score: 0';
-  timerDisplay.textContent = 'Time: ' + time;
-  message.style.display = 'none';
+  scoreDisplay.style.display = 'none';
+  timerDisplay.style.display = 'none';
   restartBtn.style.display = 'none';
-  startMessage.style.display = 'none';
-  scoreDisplay.style.display = 'block';
-  timerDisplay.style.display = 'block';
-  target.style.display = 'block';
-  gameActive = true;
-  moveTargetRandom();
-  startTimer();
-}
-
-startBtn.addEventListener('click', startGame);
-restartBtn.addEventListener('click', startGame);
-
-// Initialize visibility
-target.style.display = 'none';
-scoreDisplay.style.display = 'none';
-timerDisplay.style.display = 'none';
-restartBtn.style.display = 'none';
+});
 </script>
 </body>
 </html>
