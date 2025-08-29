@@ -25,10 +25,10 @@
     position: absolute;
     cursor: pointer;
     pointer-events: auto;
-    transition: transform 0.1s;
+    transition: transform 0.1s ease, left 0.1s ease, top 0.1s ease;
   }
 
-  #scoreboard {
+  #scoreboard, #timer {
     position: fixed;
     top: 20px;
     font-size: 1.5rem;
@@ -36,20 +36,44 @@
   }
 
   #timer {
-    position: fixed;
     top: 50px;
-    font-size: 1.2rem;
-    text-shadow: 2px 2px 5px black;
+    font-size: 1.3rem;
+  }
+
+  #controls {
+    position: fixed;
+    top: 90px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
   }
 
   #message {
     position: fixed;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 2rem;
+    font-size: 2.2rem;
     display: none;
     color: gold;
     text-shadow: 2px 2px 5px black;
+    text-align: center;
+  }
+
+  #restartBtn {
+    display: none;
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    background: gold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+  }
+
+  #restartBtn:hover {
+    transform: scale(1.1);
+    background: #ffc107;
   }
 
   .particle {
@@ -64,8 +88,16 @@
   }
 
   @keyframes fade {
-    0% { transform: translateY(0px); opacity: 1; }
-    100% { transform: translateY(-50px); opacity: 0; }
+    0% { transform: translateY(0px) scale(1); opacity: 1; }
+    100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+  }
+
+  input[type="number"] {
+    width: 60px;
+    padding: 3px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
   }
 </style>
 </head>
@@ -73,7 +105,15 @@
 
 <div id="scoreboard">Score: 0</div>
 <div id="timer">Time: 30</div>
-<div id="message">Game Over!</div>
+
+<div id="controls">
+  <label>Set Timer: <input id="timerInput" type="number" value="30" min="5" max="300"> sec</label>
+  <button id="startBtn">Start Game</button>
+</div>
+
+<div id="message"></div>
+<button id="restartBtn">Restart Game</button>
+
 <img id="target" src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" alt="Subscribe">
 
 <script>
@@ -81,14 +121,18 @@ const target = document.getElementById('target');
 const scoreDisplay = document.getElementById('scoreboard');
 const timerDisplay = document.getElementById('timer');
 const message = document.getElementById('message');
+const restartBtn = document.getElementById('restartBtn');
+const startBtn = document.getElementById('startBtn');
+const timerInput = document.getElementById('timerInput');
 
 let score = 0;
 let time = 30;
 let gameInterval;
+let gameActive = false;
 
-// Spawn particles when clicked
+// Spawn particles
 function spawnParticles(x, y) {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 7; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
     p.style.left = x + 'px';
@@ -100,48 +144,49 @@ function spawnParticles(x, y) {
 
 // Click handler
 target.addEventListener('click', (e) => {
+  if(!gameActive) return;
   score++;
   scoreDisplay.textContent = 'Score: ' + score;
   spawnParticles(e.pageX, e.pageY);
-  moveTargetRandom(); // optional small random jump
+  moveTargetRandom();
 });
 
 // Countdown timer
 function startTimer() {
+  clearInterval(gameInterval);
   gameInterval = setInterval(() => {
+    if(!gameActive) return;
     time--;
     timerDisplay.textContent = 'Time: ' + time;
-    if (time <= 0) {
-      clearInterval(gameInterval);
-      target.style.display = 'none';
-      message.style.display = 'block';
-    }
+    if (time <= 0) endGame();
   }, 1000);
 }
 
-// Move target randomly (used on click)
+// Move target randomly (on click or random jump)
 function moveTargetRandom() {
   const x = Math.random() * (window.innerWidth - target.offsetWidth);
   const y = Math.random() * (window.innerHeight - target.offsetHeight);
   target.style.left = x + 'px';
   target.style.top = y + 'px';
+  target.style.transform = rotate(${Math.random()*360}deg) scale(${0.8 + Math.random()*0.4});
 }
 
-// Make target run away from mouse
+// Run-away feature
 document.addEventListener('mousemove', (e) => {
+  if(!gameActive) return;
   const rect = target.getBoundingClientRect();
   const dx = rect.left + rect.width / 2 - e.clientX;
   const dy = rect.top + rect.height / 2 - e.clientY;
   const distance = Math.sqrt(dx*dx + dy*dy);
 
-  if (distance < 150) { // only run when close
-    const moveX = (dx / distance) * 10;
-    const moveY = (dy / distance) * 10;
+  if (distance < 150) {
+    const speed = 8 + score*0.3;
+    const moveX = (dx / distance) * speed;
+    const moveY = (dy / distance) * speed;
 
     let newX = rect.left + moveX;
     let newY = rect.top + moveY;
 
-    // Keep inside window
     newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
     newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
 
@@ -150,9 +195,37 @@ document.addEventListener('mousemove', (e) => {
   }
 });
 
-// Initialize
+// End game
+function endGame() {
+  gameActive = false;
+  message.textContent = Game Over! Your Score: ${score};
+  message.style.display = 'block';
+  restartBtn.style.display = 'inline-block';
+}
+
+// Restart game
+function restartGame() {
+  score = 0;
+  time = parseInt(timerInput.value) || 30;
+  scoreDisplay.textContent = 'Score: 0';
+  timerDisplay.textContent = 'Time: ' + time;
+  message.style.display = 'none';
+  restartBtn.style.display = 'none';
+  gameActive = true;
+  moveTargetRandom();
+  startTimer();
+}
+
+// Start button
+startBtn.addEventListener('click', () => {
+  time = parseInt(timerInput.value) || 30;
+  restartGame();
+});
+
+restartBtn.addEventListener('click', restartGame);
+
+// Initialize target position
 moveTargetRandom();
-startTimer();
 </script>
 
 </body>
