@@ -19,6 +19,13 @@
     user-select: none;
   }
 
+  #startMessage {
+    font-size: 2rem;
+    text-shadow: 2px 2px 5px black;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
   #target {
     width: 70px;
     height: 70px;
@@ -26,6 +33,7 @@
     cursor: pointer;
     pointer-events: auto;
     transition: transform 0.1s ease, left 0.1s ease, top 0.1s ease;
+    display: none;
   }
 
   #scoreboard, #timer {
@@ -33,6 +41,7 @@
     top: 20px;
     font-size: 1.5rem;
     text-shadow: 2px 2px 5px black;
+    display: none;
   }
 
   #timer {
@@ -41,27 +50,21 @@
   }
 
   #controls {
-    position: fixed;
-    top: 90px;
     display: flex;
     gap: 10px;
     align-items: center;
+    margin-bottom: 20px;
   }
 
   #message {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 2.2rem;
+    font-size: 2rem;
     display: none;
     color: gold;
     text-shadow: 2px 2px 5px black;
     text-align: center;
   }
 
-  #restartBtn {
-    display: none;
-    margin-top: 20px;
+  #restartBtn, #startBtn {
     padding: 10px 20px;
     font-size: 1.2rem;
     background: gold;
@@ -71,7 +74,7 @@
     transition: transform 0.2s, background 0.2s;
   }
 
-  #restartBtn:hover {
+  #restartBtn:hover, #startBtn:hover {
     transform: scale(1.1);
     background: #ffc107;
   }
@@ -103,18 +106,20 @@
 </head>
 <body>
 
-<div id="scoreboard">Score: 0</div>
-<div id="timer">Time: 30</div>
+<div id="startMessage">Click the Subscribe button as much as you can!</div>
 
 <div id="controls">
   <label>Set Timer: <input id="timerInput" type="number" value="30" min="5" max="300"> sec</label>
   <button id="startBtn">Start Game</button>
 </div>
 
+<div id="scoreboard">Score: 0</div>
+<div id="timer">Time: 30</div>
 <div id="message"></div>
 <button id="restartBtn">Restart Game</button>
 
-<img id="target" src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" alt="Subscribe">
+<!-- Subscribe button image -->
+<img id="target" src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Subscribe_button.svg" alt="Subscribe">
 
 <script>
 const target = document.getElementById('target');
@@ -124,6 +129,7 @@ const message = document.getElementById('message');
 const restartBtn = document.getElementById('restartBtn');
 const startBtn = document.getElementById('startBtn');
 const timerInput = document.getElementById('timerInput');
+const startMessage = document.getElementById('startMessage');
 
 let score = 0;
 let time = 30;
@@ -162,7 +168,7 @@ function startTimer() {
   }, 1000);
 }
 
-// Move target randomly (on click or random jump)
+// Move target randomly
 function moveTargetRandom() {
   const x = Math.random() * (window.innerWidth - target.offsetWidth);
   const y = Math.random() * (window.innerHeight - target.offsetHeight);
@@ -203,30 +209,26 @@ function endGame() {
   restartBtn.style.display = 'inline-block';
 }
 
-// Restart game
-function restartGame() {
+// Start game
+function startGame() {
   score = 0;
   time = parseInt(timerInput.value) || 30;
   scoreDisplay.textContent = 'Score: 0';
   timerDisplay.textContent = 'Time: ' + time;
   message.style.display = 'none';
   restartBtn.style.display = 'none';
+  startMessage.style.display = 'none';
+  scoreDisplay.style.display = 'block';
+  timerDisplay.style.display = 'block';
+  target.style.display = 'block';
   gameActive = true;
   moveTargetRandom();
   startTimer();
 }
 
-// Start button
-startBtn.addEventListener('click', () => {
-  time = parseInt(timerInput.value) || 30;
-  restartGame();
-});
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
 
-restartBtn.addEventListener('click', restartGame);
-
-// Initialize target position
-moveTargetRandom();
 </script>
-
 </body>
 </html>
