@@ -207,6 +207,7 @@ function endGame() {
   message.textContent = Game Over! Your Score: ${score};
   message.style.display = 'block';
   restartBtn.style.display = 'inline-block';
+  target.style.display = 'none';
 }
 
 // Start game
@@ -229,7 +230,7 @@ function startGame() {
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
 
-// Initialize target hidden
+// Initialize visibility
 target.style.display = 'none';
 scoreDisplay.style.display = 'none';
 timerDisplay.style.display = 'none';
