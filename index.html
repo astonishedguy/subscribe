@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catch the Subscribe!</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+    user-select: none;
+  }
+
+  #target {
+    width: 70px;
+    height: 70px;
+    position: absolute;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.1s;
+  }
+
+  #scoreboard {
+    position: fixed;
+    top: 20px;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 5px black;
+  }
+
+  #timer {
+    position: fixed;
+    top: 50px;
+    font-size: 1.2rem;
+    text-shadow: 2px 2px 5px black;
+  }
+
+  #message {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    display: none;
+    color: gold;
+    text-shadow: 2px 2px 5px black;
+  }
+
+  .particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: yellow;
+    opacity: 0.8;
+    animation: fade 0.6s linear forwards;
+  }
+
+  @keyframes fade {
+    0% { transform: translateY(0px); opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="scoreboard">Score: 0</div>
+<div id="timer">Time: 30</div>
+<div id="message">Game Over!</div>
+<img id="target" src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" alt="Subscribe">
+
+<script>
+const target = document.getElementById('target');
+const scoreDisplay = document.getElementById('scoreboard');
+const timerDisplay = document.getElementById('timer');
+const message = document.getElementById('message');
+
+let score = 0;
+let time = 30;
+let gameInterval;
+
+// Spawn particles when clicked
+function spawnParticles(x, y) {
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 600);
+  }
+}
+
+// Click handler
+target.addEventListener('click', (e) => {
+  score++;
+  scoreDisplay.textContent = 'Score: ' + score;
+  spawnParticles(e.pageX, e.pageY);
+  moveTargetRandom(); // optional small random jump
+});
+
+// Countdown timer
+function startTimer() {
+  gameInterval = setInterval(() => {
+    time--;
+    timerDisplay.textContent = 'Time: ' + time;
+    if (time <= 0) {
+      clearInterval(gameInterval);
+      target.style.display = 'none';
+      message.style.display = 'block';
+    }
+  }, 1000);
+}
+
+// Move target randomly (used on click)
+function moveTargetRandom() {
+  const x = Math.random() * (window.innerWidth - target.offsetWidth);
+  const y = Math.random() * (window.innerHeight - target.offsetHeight);
+  target.style.left = x + 'px';
+  target.style.top = y + 'px';
+}
+
+// Make target run away from mouse
+document.addEventListener('mousemove', (e) => {
+  const rect = target.getBoundingClientRect();
+  const dx = rect.left + rect.width / 2 - e.clientX;
+  const dy = rect.top + rect.height / 2 - e.clientY;
+  const distance = Math.sqrt(dx*dx + dy*dy);
+
+  if (distance < 150) { // only run when close
+    const moveX = (dx / distance) * 10;
+    const moveY = (dy / distance) * 10;
+
+    let newX = rect.left + moveX;
+    let newY = rect.top + moveY;
+
+    // Keep inside window
+    newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
+    newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
+
+    target.style.left = newX + 'px';
+    target.style.top = newY + 'px';
+  }
+});
+
+// Initialize
+moveTargetRandom();
+startTimer();
+</script>
+
+</body>
+</html>
